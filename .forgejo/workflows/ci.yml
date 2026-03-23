@@ -55,8 +55,20 @@ jobs:
       - name: Install Docker CLI
         run: apt-get update -qq && apt-get install -y -qq docker.io
 
+      - name: Debug network
+        run: |
+          echo "DOCKER_HOST=$DOCKER_HOST"
+          cat /etc/hosts
+          nc -zv dind 2375 || echo "port 2375 unreachable"
+          nc -zv dind 2376 || echo "port 2376 unreachable"
+
       - name: Wait for Docker daemon
-        run: until docker info > /dev/null 2>&1; do sleep 1; done
+        run: |
+          for i in $(seq 1 30); do
+            docker info && break
+            echo "attempt $i failed, retrying..."
+            sleep 2
+          done
 
       - name: Build Docker image
         run: |
