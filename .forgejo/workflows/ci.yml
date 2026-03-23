@@ -39,14 +39,6 @@ jobs:
     if: github.ref == 'refs/heads/main'
     container:
       image: nikolaik/python-nodejs:python3.12-nodejs20
-      env:
-        DOCKER_HOST: tcp://dind:2375
-    services:
-      dind:
-        image: docker:dind
-        options: --privileged
-        env:
-          DOCKER_TLS_CERTDIR: ""
 
     steps:
       - name: Check out code
@@ -54,21 +46,6 @@ jobs:
 
       - name: Install Docker CLI
         run: apt-get update -qq && apt-get install -y -qq docker.io
-
-      - name: Debug network
-        run: |
-          echo "DOCKER_HOST=$DOCKER_HOST"
-          cat /etc/hosts
-          nc -zv dind 2375 || echo "port 2375 unreachable"
-          nc -zv dind 2376 || echo "port 2376 unreachable"
-
-      - name: Wait for Docker daemon
-        run: |
-          for i in $(seq 1 30); do
-            docker info && break
-            echo "attempt $i failed, retrying..."
-            sleep 2
-          done
 
       - name: Build Docker image
         run: |
