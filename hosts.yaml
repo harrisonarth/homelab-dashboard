@@ -1,0 +1,2 @@
+# hosts.yaml — remote hosts only; local is auto-registered on startup
+hosts: []
