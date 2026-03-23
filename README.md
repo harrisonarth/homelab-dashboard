@@ -9,7 +9,7 @@ A lightweight, self-hosted system metrics dashboard for your homelab. Built with
 - HTML dashboard frontend served via Jinja2 templates
 - Health check endpoint (`/health`) for monitoring and CI
 - Docker support for easy deployment
-- CI pipeline (Forgejo Actions) with linting and tests on every push
+- CI pipeline (Forgejo Actions + GitHub Actions) with linting and tests on every push
 
 ## Tech Stack
 
@@ -63,11 +63,16 @@ flake8 app/ tests/ --max-line-length=100
 ```
 ## CI/CD
 
-This project uses Forgejo Actions (`.forgejo/workflows/ci.yml`). On every push it:
+CI runs on both Forgejo Actions and GitHub Actions. On every push, both pipelines:
 
-1. Installs dependencies
-2. Runs flake8
-3. Runs pytest
+1. Install dependencies
+2. Run flake8
+3. Run pytest
+
+| Platform | Workflow file |
+|---|---|
+| Forgejo | `.forgejo/workflows/ci.yml` — runs on a self-hosted `docker` runner |
+| GitHub | `.github/workflows/ci.yml` — runs on `ubuntu-latest` |
 
 ## Planned
 
