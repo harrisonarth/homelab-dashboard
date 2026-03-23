@@ -111,7 +111,7 @@ def get_system_info():
         ),
     }
 
-def get_all_host_metrics():
+def get_all_metrics():
     """
     Collect all host metrics in a single call.
     Returns a dict suitable for JSON serialization.
