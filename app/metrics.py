@@ -1,3 +1,5 @@
+import socket
+import statistics
 import psutil
 from datetime import datetime
 
@@ -6,9 +8,10 @@ def get_cpu_metrics():
     """
     Return CPU usage metrics.
     """
+    per_core = psutil.cpu_percent(interval=0.5, percpu=True)
     return {
-        "percent": psutil.cpu_percent(interval=0.5),
-        "per_core": psutil.cpu_percent(interval=0.5, percpu=True),
+        "percent": statistics.mean(per_core),
+        "per_core": per_core,
         "core_count": psutil.cpu_count(logical=True),
         "physical_cores": psutil.cpu_count(logical=False),
         "load_avg": list(psutil.getloadavg()),
@@ -64,6 +67,7 @@ def get_disk_metrics():
             continue  # some mounts aren't readable
 
     # Disk I/O counters
+    disk_io = {}
     io = psutil.disk_io_counters()
     if io:
         disk_io = {
@@ -109,7 +113,7 @@ def get_system_info():
     """
     boot_time = datetime.fromtimestamp(psutil.boot_time())
     return {
-        "hostname": __import__('socket').gethostname(),
+        "hostname": socket.gethostname(),
         "boot_time": boot_time.strftime("%Y-%m-%d %H:%M:%S"),
         "uptime_seconds": int(
             (datetime.now() - boot_time).total_seconds()

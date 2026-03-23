@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from app.metrics import get_all_metrics
+from app.metrics import get_all_metrics, get_cpu_metrics, get_memory_metrics, get_disk_metrics, get_network_metrics
 
 app = FastAPI(
     title="Homelab Dashboard",
@@ -38,22 +38,25 @@ async def metrics():
 @app.get("/api/cpu")
 async def cpu():
     """Return CPU metrics only."""
-    from app.metrics import get_cpu_metrics
     return JSONResponse(content=get_cpu_metrics())
 
 
 @app.get("/api/memory")
 async def memory():
     """Return memory metrics only."""
-    from app.metrics import get_memory_metrics
     return JSONResponse(content=get_memory_metrics())
 
 
 @app.get("/api/disk")
 async def disk():
     """Return disk metrics only."""
-    from app.metrics import get_disk_metrics
     return JSONResponse(content=get_disk_metrics())
+
+
+@app.get("/api/network")
+async def network():
+    """Return network metrics only."""
+    return JSONResponse(content=get_network_metrics())
 
 
 # A simple health check endpoint.

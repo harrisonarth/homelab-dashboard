@@ -2,6 +2,8 @@
 
 A lightweight, self-hosted system metrics dashboard for your homelab. Built with FastAPI and psutil, it exposes real-time CPU, memory, disk, and network stats via a JSON API and a Jinja2-rendered HTML frontend.
 
+![Dashboard screenshot](assets/screenshot.png)
+
 ## Features
 
 - Real-time system metrics: CPU, memory, disk partitions, network I/O

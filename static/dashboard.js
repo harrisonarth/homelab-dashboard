@@ -25,7 +25,7 @@ function setBar(barId, percent) {
 }
 
 function updateCPU(cpu) {
-    document.getElementById('cpu-percent').textContent = `${cpu.percent}%`;
+    document.getElementById('cpu-percent').textContent = `${cpu.percent.toFixed(2)}%`;
     setBar('cpu-bar', cpu.percent);
     document.getElementById('cpu-cores').textContent =
         `${cpu.physical_cores} physical / ${cpu.core_count} logical`;
@@ -34,7 +34,7 @@ function updateCPU(cpu) {
 }
 
 function updateMemory(mem) {
-    document.getElementById('mem-percent').textContent = `${mem.percent}%`;
+    document.getElementById('mem-percent').textContent = `${mem.percent.toFixed(2)}%`;
     setBar('mem-bar', mem.percent);
     document.getElementById('mem-used').textContent =
         `${mem.used_gb} GB / ${mem.total_gb} GB`;
@@ -52,7 +52,7 @@ function updateDisk(disk) {
             <div class="disk-label">${p.mountpoint} <span style="color:var(--muted)">(${p.fstype})</span></div>
             <div class="metric-row">
                 <span class="metric-label">${p.used_gb} GB / ${p.total_gb} GB</span>
-                <span class="metric-value" style="color:${colorForPercent(p.percent) === 'red' ? 'var(--red)' : colorForPercent(p.percent) === 'yellow' ? 'var(--yellow)' : 'var(--text)'}">${p.percent}%</span>
+                <span class="metric-value" style="color:${colorForPercent(p.percent) === 'red' ? 'var(--red)' : colorForPercent(p.percent) === 'yellow' ? 'var(--yellow)' : 'var(--text)'}">${p.percent.toFixed(2)}%</span>
             </div>
             <div class="progress-bar">
                 <div class="progress-fill ${colorForPercent(p.percent)}" style="width:${p.percent}%"></div>

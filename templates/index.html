@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Homelab Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0f0f0f;
@@ -97,33 +100,6 @@
         .progress-fill.yellow { background: var(--yellow); }
         .progress-fill.red { background: var(--red); }
 
-        .core-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: 6px;
-            margin-top: 8px;
-        }
-
-        .core-cell {
-            background: var(--surface2);
-            border-radius: 4px;
-            padding: 4px 6px;
-            text-align: center;
-            font-size: 11px;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 10px;
-            letter-spacing: 0.5px;
-        }
-
-        .status-badge.running { background: #1b3a1b; color: var(--green); }
-        .status-badge.exited  { background: #3a1b1b; color: var(--red); }
-        .status-badge.paused  { background: #3a2e1b; color: var(--yellow); }
-
         .disk-partitions { display: flex; flex-direction: column; gap: 10px; }
         .disk-row .disk-label { color: var(--muted); margin-bottom: 4px; }
 
@@ -169,7 +145,6 @@
             <span class="metric-label">Load avg (1/5/15m)</span>
             <span class="metric-value" id="cpu-load">—</span>
         </div>
-        <div class="core-grid" id="cpu-core-grid"></div>
     </div>
 
     <!-- Memory Card -->
