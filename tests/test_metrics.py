@@ -1,4 +1,4 @@
-from app.metrics import (
+from core.metrics import (
     get_cpu_metrics,
     get_memory_metrics,
     get_disk_metrics,

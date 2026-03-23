@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from app.metrics import (
+from core.metrics import (
     get_all_metrics, get_cpu_metrics, get_memory_metrics,
     get_disk_metrics, get_network_metrics,
 )
