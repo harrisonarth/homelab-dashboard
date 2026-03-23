@@ -1,0 +1,52 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - '**'        # every branch push triggers lint and test
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  lint-and-test:
+    name: Lint and Test
+    runs-on: docker
+    container:
+      image: python:3.12-slim
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          pip install --no-cache-dir -r requirements.txt
+
+      - name: Run flake8 linter
+        run: |
+          flake8 app/ tests/ --max-line-length=100
+
+      - name: Run pytest
+        run: |
+          pytest tests/ -v
+
+  build-image:
+    name: Build Docker Image
+    runs-on: docker
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t homelab-dashboard:latest .
+          docker tag homelab-dashboard:latest homelab-dashboard:${{ github.sha }}
+
+      - name: Confirm image was built
+        run: |
+          docker images | grep homelab-dashboard
