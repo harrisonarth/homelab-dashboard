@@ -1,7 +1,8 @@
 import psutil
 from datetime import datetime
 
-def get_cpu_metrics(): 
+
+def get_cpu_metrics():
     """
     Return CPU usage metrics.
     """
@@ -13,7 +14,8 @@ def get_cpu_metrics():
         "load_avg": list(psutil.getloadavg()),
     }
 
-def get_memory_metrics(): 
+
+def get_memory_metrics():
     """
     Return RAM usage metrics.
     """
@@ -31,6 +33,7 @@ def get_memory_metrics():
         "swap_used": swap.used,
         "swap_percent": swap.percent,
     }
+
 
 def get_disk_metrics():
     """
@@ -59,7 +62,7 @@ def get_disk_metrics():
             })
         except PermissionError:
             continue  # some mounts aren't readable
-    
+
     # Disk I/O counters
     io = psutil.disk_io_counters()
     if io:
@@ -74,6 +77,7 @@ def get_disk_metrics():
         "partitions": partitions,
         "io": disk_io,
     }
+
 
 def get_network_metrics():
     """
@@ -98,6 +102,7 @@ def get_network_metrics():
 
     return {"interfaces": interfaces}
 
+
 def get_system_info():
     """
     Return static system information.
@@ -110,6 +115,7 @@ def get_system_info():
             (datetime.now() - boot_time).total_seconds()
         ),
     }
+
 
 def get_all_metrics():
     """
