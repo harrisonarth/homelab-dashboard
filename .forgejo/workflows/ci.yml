@@ -14,7 +14,6 @@ jobs:
     name: Lint and Test
     runs-on: docker
     container:
-    container:
       image: nikolaik/python-nodejs:python3.12-nodejs20
 
     steps:
