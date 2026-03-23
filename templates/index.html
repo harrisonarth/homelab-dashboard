@@ -37,9 +37,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
         }
 
         header h1 { color: var(--accent); font-size: 18px; letter-spacing: 2px; }
@@ -103,12 +101,66 @@
         .disk-partitions { display: flex; flex-direction: column; gap: 10px; }
         .disk-row .disk-label { color: var(--muted); margin-bottom: 4px; }
 
-        .net-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
-        .net-iface { color: var(--accent); }
+        .net-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px; }
+        .net-iface { color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+        .net-stats { color: var(--muted); white-space: nowrap; flex-shrink: 0; }
 
         .wide { grid-column: 1 / -1; }
 
         #uptime { color: var(--muted); font-size: 11px; }
+
+        /* Tab bar */
+        #tab-bar {
+            display: flex;
+            gap: 4px;
+            border-bottom: 1px solid #45475a;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 6px 16px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            color: #a6adc8;
+            border-bottom: 2px solid transparent;
+            transition: color 0.15s;
+        }
+        .tab:hover { color: #cdd6f4; }
+        .tab.active {
+            color: #cdd6f4;
+            border-bottom-color: #89b4fa;
+        }
+        .view { display: block; }
+        .view.hidden { display: none; }
+
+        /* All-hosts grid */
+        #host-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+        }
+        .host-card {
+            background: #1e1e2e;
+            border: 1px solid #45475a;
+            border-radius: 6px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .host-card .host-name { font-size: 1em; color: #cdd6f4; margin-bottom: 8px; }
+        .host-card .host-stat { font-size: 0.8em; color: #a6adc8; line-height: 1.8; }
+        .host-card .offline { color: #f38ba8; }
+        .host-card .online-badge::before { content: "● "; color: #a6e3a1; }
+        .host-card .offline-badge::before { content: "● "; color: #f38ba8; }
+
+        /* Host detail header */
+        #host-detail-header {
+            font-size: 13px;
+            color: #cdd6f4;
+            margin-bottom: 16px;
+        }
+        #host-detail-header .offline { color: #f38ba8; }
+        #host-detail-header .online-badge::before { content: "● "; color: #a6e3a1; }
+        #host-detail-header .offline-badge::before { content: "● "; color: #f38ba8; }
     </style>
 </head>
 <body>
@@ -125,62 +177,74 @@
     </div>
 </header>
 
-<div class="grid">
+<!-- Tab bar — populated by dashboard.js -->
+<nav id="tab-bar"></nav>
 
-    <!-- CPU Card -->
-    <div class="card" id="card-cpu">
-        <div class="card-title">CPU</div>
-        <div class="metric-row">
-            <span class="metric-label">Usage</span>
-            <span class="metric-value" id="cpu-percent">—</span>
-        </div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="cpu-bar"></div>
-        </div>
-        <div class="metric-row">
-            <span class="metric-label">Cores</span>
-            <span class="metric-value" id="cpu-cores">—</span>
-        </div>
-        <div class="metric-row">
-            <span class="metric-label">Load avg (1/5/15m)</span>
-            <span class="metric-value" id="cpu-load">—</span>
-        </div>
-    </div>
+<!-- All hosts summary view -->
+<div id="view-all" class="view">
+    <div id="host-grid"></div>
+</div>
 
-    <!-- Memory Card -->
-    <div class="card" id="card-memory">
-        <div class="card-title">Memory</div>
-        <div class="metric-row">
-            <span class="metric-label">Usage</span>
-            <span class="metric-value" id="mem-percent">—</span>
-        </div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="mem-bar"></div>
-        </div>
-        <div class="metric-row">
-            <span class="metric-label">Used / Total</span>
-            <span class="metric-value" id="mem-used">—</span>
-        </div>
-        <div class="metric-row">
-            <span class="metric-label">Available</span>
-            <span class="metric-value" id="mem-available">—</span>
-        </div>
-        <div class="metric-row">
-            <span class="metric-label">Swap</span>
-            <span class="metric-value" id="mem-swap">—</span>
-        </div>
-    </div>
+<!-- Single host detail view -->
+<div id="view-host" class="view hidden">
+    <div id="host-detail-header"></div>
+    <div class="grid">
 
-    <!-- Disk Card -->
-    <div class="card" id="card-disk">
-        <div class="card-title">Disk</div>
-        <div class="disk-partitions" id="disk-partitions"></div>
-    </div>
+        <!-- CPU Card -->
+        <div class="card" id="card-cpu">
+            <div class="card-title">CPU</div>
+            <div class="metric-row">
+                <span class="metric-label">Usage</span>
+                <span class="metric-value" id="cpu-percent">—</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="cpu-bar"></div>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Cores</span>
+                <span class="metric-value" id="cpu-cores">—</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Load avg (1/5/15m)</span>
+                <span class="metric-value" id="cpu-load">—</span>
+            </div>
+        </div>
 
-    <!-- Network Card -->
-    <div class="card" id="card-network">
-        <div class="card-title">Network</div>
-        <div id="network-interfaces"></div>
+        <!-- Memory Card -->
+        <div class="card" id="card-memory">
+            <div class="card-title">Memory</div>
+            <div class="metric-row">
+                <span class="metric-label">Usage</span>
+                <span class="metric-value" id="mem-percent">—</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="mem-bar"></div>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Used / Total</span>
+                <span class="metric-value" id="mem-used">—</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Available</span>
+                <span class="metric-value" id="mem-available">—</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Swap</span>
+                <span class="metric-value" id="mem-swap">—</span>
+            </div>
+        </div>
+
+        <!-- Disk Card -->
+        <div class="card" id="card-disk">
+            <div class="card-title">Disk</div>
+            <div class="disk-partitions" id="disk-partitions"></div>
+        </div>
+
+        <!-- Network Card -->
+        <div class="card" id="card-network">
+            <div class="card-title">Network</div>
+            <div id="network-interfaces"></div>
+        </div>
     </div>
 </div>
 
