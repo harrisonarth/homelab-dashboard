@@ -68,7 +68,6 @@ This project uses Forgejo Actions (`.forgejo/workflows/ci.yml`). On every push i
 1. Installs dependencies
 2. Runs flake8
 3. Runs pytest
-4. On `main`: builds the Docker image
 
 ## Planned
 

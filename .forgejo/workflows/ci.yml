@@ -32,25 +32,3 @@ jobs:
         run: |
           pytest tests/ -v
 
-  build-image:
-    name: Build Docker Image
-    runs-on: docker
-    needs: lint-and-test
-    if: github.ref == 'refs/heads/main'
-    container:
-      image: nikolaik/python-nodejs:python3.12-nodejs20
-
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Install Docker CLI
-        run: apt-get update -qq && apt-get install -y -qq docker.io
-
-      - name: Build Docker image
-        run: |
-          docker build -t homelab-dashboard:latest .
-          docker tag homelab-dashboard:latest homelab-dashboard:${{ github.sha }}
-
-      - name: Confirm image was built
-        run: docker images | grep homelab-dashboard
