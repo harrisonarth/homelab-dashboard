@@ -22,13 +22,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install --no-cache-dir -r requirements.txt
+          pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
 
       - name: Run flake8 linter
         run: |
-          flake8 app/ tests/ --max-line-length=100
+          python -m flake8 app/ agent/ core/ tests/ --max-line-length=100
 
       - name: Run pytest
         run: |
-          pytest tests/ -v
+          python -m pytest tests/ -v
 
