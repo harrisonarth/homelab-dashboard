@@ -37,10 +37,20 @@ jobs:
     runs-on: docker
     needs: lint-and-test
     if: github.ref == 'refs/heads/main'
+    container:
+      image: docker:24.0
+      options: --privileged
 
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+
+      - name: Start Docker daemon
+        run: dockerd-entrypoint.sh &
+
+      - name: Wait for Docker
+        run: |
+          until docker info > /dev/null 2>&1; do sleep 1; done
 
       - name: Build Docker image
         run: |
