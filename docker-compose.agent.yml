@@ -1,0 +1,13 @@
+services:
+  homelab-agent:
+    build:
+      context: .
+      dockerfile: agent/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - AGENT_TOKEN=${AGENT_TOKEN:-}
+      - AGENT_PORT=8001
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
