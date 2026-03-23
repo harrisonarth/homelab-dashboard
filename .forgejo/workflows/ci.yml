@@ -38,19 +38,25 @@ jobs:
     needs: lint-and-test
     if: github.ref == 'refs/heads/main'
     container:
-      image: docker:24.0
-      options: --privileged
+      image: nikolaik/python-nodejs:python3.12-nodejs20
+      env:
+        DOCKER_HOST: tcp://dind:2375
+    services:
+      dind:
+        image: docker:dind
+        options: --privileged
+        env:
+          DOCKER_TLS_CERTDIR: ""
 
     steps:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Start Docker daemon
-        run: dockerd-entrypoint.sh &
+      - name: Install Docker CLI
+        run: apt-get update -qq && apt-get install -y -qq docker.io
 
-      - name: Wait for Docker
-        run: |
-          until docker info > /dev/null 2>&1; do sleep 1; done
+      - name: Wait for Docker daemon
+        run: until docker info > /dev/null 2>&1; do sleep 1; done
 
       - name: Build Docker image
         run: |
@@ -58,5 +64,4 @@ jobs:
           docker tag homelab-dashboard:latest homelab-dashboard:${{ github.sha }}
 
       - name: Confirm image was built
-        run: |
-          docker images | grep homelab-dashboard
+        run: docker images | grep homelab-dashboard
