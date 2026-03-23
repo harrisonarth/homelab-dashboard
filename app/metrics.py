@@ -41,7 +41,7 @@ def get_disk_metrics():
     partitions = []
 
     for part in psutil.disk_partitions():
-        if part.fstype not in real_fs_types:
+        if part.fstype.lower() not in real_fs_types:
             continue
         try:
             usage = psutil.disk_usage(part.mountpoint)

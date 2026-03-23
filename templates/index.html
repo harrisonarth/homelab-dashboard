@@ -2,11 +2,213 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Homelab Dashboard</title>
+    <style>
+        :root {
+            --bg: #0f0f0f;
+            --surface: #1a1a1a;
+            --surface2: #242424;
+            --border: #2e2e2e;
+            --text: #e0e0e0;
+            --muted: #888;
+            --accent: #00bcd4;
+            --green: #4caf50;
+            --yellow: #ff9800;
+            --red: #f44336;
+            --font: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        header h1 { color: var(--accent); font-size: 18px; letter-spacing: 2px; }
+        #hostname { color: var(--muted); font-size: 12px; }
+        #timestamp { color: var(--muted); font-size: 11px; }
+        #status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 6px; }
+        #status-dot.error { background: var(--red); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px;
+            width: 100%;
+        }
+
+        .card-title {
+            color: var(--accent);
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .metric-label { color: var(--muted); }
+        .metric-value { color: var(--text); font-weight: bold; }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--surface2);
+            border-radius: 2px;
+            margin: 6px 0 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-fill.green { background: var(--green); }
+        .progress-fill.yellow { background: var(--yellow); }
+        .progress-fill.red { background: var(--red); }
+
+        .core-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .core-cell {
+            background: var(--surface2);
+            border-radius: 4px;
+            padding: 4px 6px;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.running { background: #1b3a1b; color: var(--green); }
+        .status-badge.exited  { background: #3a1b1b; color: var(--red); }
+        .status-badge.paused  { background: #3a2e1b; color: var(--yellow); }
+
+        .disk-partitions { display: flex; flex-direction: column; gap: 10px; }
+        .disk-row .disk-label { color: var(--muted); margin-bottom: 4px; }
+
+        .net-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .net-iface { color: var(--accent); }
+
+        .wide { grid-column: 1 / -1; }
+
+        #uptime { color: var(--muted); font-size: 11px; }
+    </style>
 </head>
 <body>
-    <h1>Homelab Dashboard</h1>
-    <p>API is running. Visit <a href="/docs">/docs</a> for the API explorer.</p>
-    <p>Metrics: <a href="/api/metrics">/api/metrics</a></p>
+
+<header>
+    <div>
+        <h1>HOMELAB DASHBOARD</h1>
+        <div id="hostname">loading...</div>
+    </div>
+    <div style="text-align:right">
+        <div><span id="status-dot"></span><span id="status-text">connecting</span></div>
+        <div id="timestamp"></div>
+        <div id="uptime"></div>
+    </div>
+</header>
+
+<div class="grid">
+
+    <!-- CPU Card -->
+    <div class="card" id="card-cpu">
+        <div class="card-title">CPU</div>
+        <div class="metric-row">
+            <span class="metric-label">Usage</span>
+            <span class="metric-value" id="cpu-percent">—</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="cpu-bar"></div>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Cores</span>
+            <span class="metric-value" id="cpu-cores">—</span>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Load avg (1/5/15m)</span>
+            <span class="metric-value" id="cpu-load">—</span>
+        </div>
+        <div class="core-grid" id="cpu-core-grid"></div>
+    </div>
+
+    <!-- Memory Card -->
+    <div class="card" id="card-memory">
+        <div class="card-title">Memory</div>
+        <div class="metric-row">
+            <span class="metric-label">Usage</span>
+            <span class="metric-value" id="mem-percent">—</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="mem-bar"></div>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Used / Total</span>
+            <span class="metric-value" id="mem-used">—</span>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Available</span>
+            <span class="metric-value" id="mem-available">—</span>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Swap</span>
+            <span class="metric-value" id="mem-swap">—</span>
+        </div>
+    </div>
+
+    <!-- Disk Card -->
+    <div class="card" id="card-disk">
+        <div class="card-title">Disk</div>
+        <div class="disk-partitions" id="disk-partitions"></div>
+    </div>
+
+    <!-- Network Card -->
+    <div class="card" id="card-network">
+        <div class="card-title">Network</div>
+        <div id="network-interfaces"></div>
+    </div>
+</div>
+
+<script src="/static/dashboard.js"></script>
 </body>
 </html>
