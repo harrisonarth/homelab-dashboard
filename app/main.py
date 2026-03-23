@@ -1,6 +1,7 @@
 import re
 import socket
 from contextlib import asynccontextmanager
+import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -10,7 +11,8 @@ from core.metrics import (
     get_all_metrics, get_cpu_metrics, get_memory_metrics,
     get_disk_metrics, get_network_metrics,
 )
-from app.hosts import load_hosts, add_host, remove_host
+from app.hosts import load_hosts, add_host, remove_host, get_host
+from app.aggregator import fetch_host_metrics, fetch_all_metrics
 
 
 @asynccontextmanager
@@ -130,3 +132,18 @@ def add_host_route(host: HostIn):
 def delete_host_route(host_id: str):
     if not remove_host(host_id):
         raise HTTPException(status_code=404, detail="Host not found")
+
+
+@app.get("/api/hosts/{host_id}/metrics")
+async def host_metrics(host_id: str):
+    host = get_host(host_id)
+    if not host:
+        raise HTTPException(status_code=404, detail="Host not found")
+    async with httpx.AsyncClient(timeout=5.0) as client:
+        return await fetch_host_metrics(host, client)
+
+
+@app.get("/api/all-metrics")
+async def all_metrics():
+    results = await fetch_all_metrics()
+    return {r["host_id"]: r for r in results}
