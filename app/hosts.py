@@ -16,12 +16,15 @@ def load_hosts() -> list[dict]:
 
 
 def save_hosts(hosts: list[dict]) -> None:
-    """Persist hosts list to YAML via atomic write (temp file + rename)."""
+    """Persist hosts list to YAML. Writes to a temp file first so a crash
+    during serialization never corrupts the live file, then copies into the
+    bind-mounted target (os.replace fails on Docker bind mounts)."""
     HOSTS_CONFIG.parent.mkdir(parents=True, exist_ok=True)
     tmp = HOSTS_CONFIG.with_suffix(".tmp")
     with open(tmp, "w") as f:
         yaml.dump({"hosts": hosts}, f, default_flow_style=False)
-    os.replace(tmp, HOSTS_CONFIG)  # atomic — no corrupt state on crash
+    with open(HOSTS_CONFIG, "w") as f:
+        f.write(tmp.read_text())
 
 
 def get_host(host_id: str) -> Optional[dict]:
