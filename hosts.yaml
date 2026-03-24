@@ -1,13 +1,2 @@
-hosts:
-- address: localhost
-  enabled: true
-  id: local
-  name: harrypc
-  port: 8000
-  token: ''
-- address: 10.0.1.80
-  enabled: true
-  id: embg
-  name: emberglow
-  port: 8001
-  token: emberglow
+ 	# hosts.yaml — remote hosts only; local is auto-registered on startup
+	hosts: []

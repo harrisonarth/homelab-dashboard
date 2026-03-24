@@ -61,7 +61,6 @@ class HostIn(BaseModel):
         return v
 
 
-
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
     """Serve the main dashboard HTML page."""

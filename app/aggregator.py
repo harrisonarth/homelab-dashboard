@@ -1,7 +1,7 @@
 import asyncio
 import time
 import httpx
-from app.hosts import load_hosts, get_host
+from app.hosts import load_hosts
 
 TIMEOUT = 5.0   # per-host fetch timeout
 CACHE_TTL = 4.0  # seconds — just under the 5s frontend poll interval

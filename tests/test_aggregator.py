@@ -9,6 +9,7 @@ from app.aggregator import fetch_host_metrics
 def clear_cache():
     aggregator_mod._cache.clear()
 
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_fetch_host_metrics_success():
