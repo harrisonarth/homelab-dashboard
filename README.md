@@ -1,87 +1,142 @@
 # homelab-dashboard
 
-A lightweight, self-hosted system metrics dashboard for your homelab. Built with FastAPI and psutil, it exposes real-time CPU, memory, disk, and network stats via a JSON API and a Jinja2-rendered HTML frontend.
+A lightweight, self-hosted dashboard for monitoring multiple machines in your homelab. A central dashboard aggregates real-time metrics from remote agents running on each host — CPU, memory, disk, and network — served via a FastAPI backend and a live-updating frontend.
 
 ![Dashboard screenshot](assets/screenshot.png)
 
 ## Features
 
-- Real-time system metrics: CPU, memory, disk partitions, network I/O
-- REST API (`/api/metrics`, `/api/cpu`, `/api/memory`, `/api/disk`)
-- HTML dashboard frontend served via Jinja2 templates
-- Health check endpoint (`/health`) for monitoring and CI
-- Docker support for easy deployment
-- CI pipeline (Forgejo Actions + GitHub Actions) with linting and tests on every push
+- **Multi-host monitoring** — watch all your machines from a single view
+- **Remote agents** — lightweight FastAPI service deployable on any Linux host via Docker
+- **Live tab UI** — overview table + per-host detail view, no page reloads
+- **Somewhat configurable** — set dashboard name and subtitle via env vars
+- **Host registry** — register and remove hosts at runtime via REST API, persisted to `hosts.yaml`
 
 ## Tech Stack
 
 - **Python 3.12** / **FastAPI** / **uvicorn**
 - **psutil** for host metrics
+- **httpx** for async remote agent fetching
 - **Jinja2** for HTML templating
+- **PyYAML** for host registry persistence
 - **Docker** for containerised deployment
 - **pytest** + **flake8** for testing and linting
 
+## Architecture
+
+```
+┌─────────────────────────────┐
+│      Central Dashboard      │  :8000
+│  app/  +  templates/static/ │
+│  hosts.yaml  (registry)     │
+└────────────┬────────────────┘
+             │ httpx (async, TTL cached)
+    ┌────────┴────────┐
+    │                 │
+┌───▼───┐         ┌───▼───┐
+│ agent │  :8001  │ agent │  :8001
+│  pi4  │         │  nas  │
+└───────┘         └───────┘
+```
+
+Each agent runs `agent/main.py` — a minimal FastAPI app that exposes the same `/api/*` metrics endpoints using the shared `core/metrics.py` module.
+
 ## Quick Start
 
-### Local (without Docker)
+### Central dashboard (local)
 
 ```bash
 python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt -r requirements-dev.txt
 uvicorn app.main:app --reload
 ```
 
 Open http://localhost:8000
 
-### Docker
+### Central dashboard (Docker)
 
 ```bash
-docker build -t homelab-dashboard .
-docker run -p 8000:8000 homelab-dashboard
+docker compose up -d
 ```
 
-## API Endpoints
+### Remote agent (Docker)
 
-| Endpoint | Description |
-|---|---|
-| `GET /` | Dashboard HTML page |
-| `GET /api/metrics` | All metrics (CPU, memory, disk, network) |
-| `GET /api/cpu` | CPU metrics only |
-| `GET /api/memory` | Memory metrics only |
-| `GET /api/disk` | Disk metrics only |
-| `GET /health` | Health check (`{"status": "ok"}`) |
+On each remote host, clone the repo and run the agent:
+
+```bash
+git clone https://github.com/harrisonarth/homelab-dashboard.git
+cd homelab-dashboard
+AGENT_TOKEN=your-secret docker compose -f docker-compose.agent.yml up -d
+```
+
+Don't forget to change `your-secret`, then register the host on the central dashboard:
+
+```bash
+curl -X POST http://<dashboard-ip>:8000/api/hosts \
+  -H "Content-Type: application/json" \
+  -d '{"id":"pi4","name":"Raspberry Pi 4","address":"192.168.1.10","port":8001,"token":"your-secret"}'
+```
+
+## API Reference
+
+### Dashboard
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/` | GET | Dashboard HTML |
+| `/health` | GET | Health check |
+| `/api/metrics` | GET | All metrics for local host |
+| `/api/cpu` | GET | CPU only |
+| `/api/memory` | GET | Memory only |
+| `/api/disk` | GET | Disk only |
+| `/api/network` | GET | Network only |
+
+### Host registry
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/hosts` | GET | List all registered hosts |
+| `/api/hosts` | POST | Register a new host |
+| `/api/hosts/{id}` | DELETE | Remove a host |
+| `/api/hosts/{id}/metrics` | GET | Fetch live metrics from a specific host |
+| `/api/all-metrics` | GET | Fetch metrics from all enabled hosts in parallel |
+
+### Agent (runs on each remote host)
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/health` | GET | Health check |
+| `/api/metrics` | GET | All metrics |
+| `/api/cpu` | GET | CPU only |
+| `/api/memory` | GET | Memory only |
+| `/api/disk` | GET | Disk only |
+| `/api/network` | GET | Network only |
+| `/api/docker` | GET | Docker stats (stub — returns `available: true/false`) |
 
 ## Running Tests
 
 ```bash
-pytest tests/ -v
+python -m pytest tests/ -v
 ```
 
 Linting:
 
 ```bash
-flake8 app/ tests/ --max-line-length=100
+python -m flake8 app/ agent/ core/ tests/ --max-line-length=100
 ```
+
 ## CI/CD
 
-CI runs on both Forgejo Actions and GitHub Actions. On every push, both pipelines:
+On every push, both pipelines install dependencies, run flake8, and run pytest.
 
-1. Install dependencies
-2. Run flake8
-3. Run pytest
-
-| Platform | Workflow file |
-|---|---|
-| Forgejo | `.forgejo/workflows/ci.yml` — runs on a self-hosted `docker` runner |
-| GitHub | `.github/workflows/ci.yml` — runs on `ubuntu-latest` |
+| Platform | Workflow file | Runner |
+|---|---|---|
+| Forgejo | `.forgejo/workflows/ci.yml` | self-hosted `docker` |
+| GitHub | `.github/workflows/ci.yml` | `ubuntu-latest` |
 
 ## Planned
 
-- Remote host support — monitor multiple machines from a single view
-- Ansible playbook for automated deployment to remote hosts
-- Log tailing — stream service/container logs from the dashboard
-
-## License
-
-See [LICENSE](LICENSE).
+- Ansible playbook for automated agent deployment
+- Docker container stats (full implementation)
+- Log tailing — stream service logs from the dashboard

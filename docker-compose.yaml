@@ -4,6 +4,9 @@ services:
     container_name: homelab-dashboard
     ports:
       - "8000:8000"
+    environment:
+      - DASHBOARD_TITLE=My Home Lab
+      - DASHBOARD_SUBTITLE=Locally hosted!
     volumes:
       - ./hosts.yaml:/app/hosts.yaml
     restart: unless-stopped
