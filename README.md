@@ -2,7 +2,8 @@
 
 A lightweight, self-hosted dashboard for monitoring multiple machines in your homelab. A central dashboard aggregates real-time metrics from remote agents running on each host — CPU, memory, disk, and network — served via a FastAPI backend and a live-updating frontend.
 
-![Dashboard screenshot](assets/screenshot.png)
+![All view](assets/Screenshot_1.png)
+![Node view](assets/Screenshot_2.png)
 
 ## Features
 
