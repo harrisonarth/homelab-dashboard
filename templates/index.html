@@ -28,7 +28,7 @@
             background: var(--bg);
             color: var(--text);
             font-family: var(--font);
-            font-size: 13px;
+            font-size: 14px;
             padding: 20px;
             min-height: 100vh;
         }
@@ -41,7 +41,7 @@
         }
 
         header h1 { color: var(--accent); font-size: 18px; letter-spacing: 2px; }
-        #hostname { color: var(--muted); font-size: 12px; }
+        #subtitle { color: var(--muted); font-size: 12px; }
         #timestamp { color: var(--muted); font-size: 11px; }
         #status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 6px; }
         #status-dot.error { background: var(--red); }
@@ -133,42 +133,61 @@
         .view { display: block; }
         .view.hidden { display: none; }
 
-        /* All-hosts grid */
-        #host-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 16px;
-        }
-        .host-card {
-            background: #1e1e2e;
-            border: 1px solid #45475a;
-            border-radius: 6px;
-            padding: 16px;
+        /* All-hosts list */
+        #host-grid { width: 100%; }
+        .host-table {
+            width: 100%;
+            border-collapse: collapse;
             font-family: 'JetBrains Mono', monospace;
+            font-size: 1em;
+            table-layout: fixed;
         }
-        .host-card .host-name { font-size: 1em; color: #cdd6f4; margin-bottom: 8px; }
-        .host-card .host-stat { font-size: 0.8em; color: #a6adc8; line-height: 1.8; }
-        .host-card .offline { color: #f38ba8; }
-        .host-card .online-badge::before { content: "● "; color: #a6e3a1; }
-        .host-card .offline-badge::before { content: "● "; color: #f38ba8; }
+        .host-table col.col-status { width: 32px; }
+        .host-table col.col-name   { width: auto; }
+        .host-table col.col-metric { width: 80px; }
+        .host-table th {
+            color: var(--muted);
+            font-weight: normal;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 1em;
+            padding: 8px 16px;
+            border-bottom: 1px solid #45475a;
+        }
+        .host-table th.col-left { text-align: left; }
+        .host-table th.col-right { text-align: right; }
+        .host-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            color: #a6adc8;
+            font-size: 1em;
+        }
+        .host-table td.col-left { text-align: left; }
+        .host-table td.col-right { text-align: right; }
+        .host-table tbody tr { cursor: pointer; transition: background 0.1s; }
+        .host-table tbody tr:hover { background: #1e1e2e; }
+        .host-table .col-name { color: #cdd6f4; }
+        .host-table .col-error { color: #f38ba8; }
+        .online-badge::before { content: "●"; color: #a6e3a1; }
+        .offline-badge::before { content: "●"; color: #f38ba8; }
 
         /* Host detail header */
         #host-detail-header {
-            font-size: 13px;
+            font-size: 14px;
             color: #cdd6f4;
             margin-bottom: 16px;
         }
         #host-detail-header .offline { color: #f38ba8; }
-        #host-detail-header .online-badge::before { content: "● "; color: #a6e3a1; }
-        #host-detail-header .offline-badge::before { content: "● "; color: #f38ba8; }
+        #host-detail-header .online-badge::before { content: "● "; color: #a6e3a1; margin-right: 4px; }
+        #host-detail-header .offline-badge::before { content: "● "; color: #f38ba8; margin-right: 4px; }
     </style>
 </head>
 <body>
 
 <header>
     <div>
-        <h1>HOMELAB DASHBOARD</h1>
-        <div id="hostname">loading...</div>
+        <h1>{{ title }}</h1>
+        {% if subtitle %}<div id="subtitle">{{ subtitle }}</div>{% endif %}
     </div>
     <div style="text-align:right">
         <div><span id="status-dot"></span><span id="status-text">connecting</span></div>

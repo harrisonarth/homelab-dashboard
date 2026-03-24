@@ -1,3 +1,4 @@
+import os
 import re
 import socket
 from contextlib import asynccontextmanager
@@ -64,7 +65,10 @@ class HostIn(BaseModel):
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
     """Serve the main dashboard HTML page."""
-    return templates.TemplateResponse(request, "index.html")
+    return templates.TemplateResponse(request, "index.html", {
+        "title": os.getenv("DASHBOARD_TITLE", "HOMELAB DASHBOARD"),
+        "subtitle": os.getenv("DASHBOARD_SUBTITLE", ""),
+    })
 
 
 # When someone visits /api/metrics, return ALL metrics as JSON.

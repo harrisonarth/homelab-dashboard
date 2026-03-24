@@ -68,45 +68,71 @@ async function pollAll() {
     const res = await fetch('/api/all-metrics');
     const data = await res.json();
     renderHostGrid(Object.values(data));
+
+    // Keep header clock updated using local host metrics
+    const local = data['local'];
+    if (local && !local.error) {
+        document.getElementById('timestamp').textContent = local.metrics.timestamp;
+        document.getElementById('uptime').textContent =
+            `up ${formatUptime(local.metrics.system.uptime_seconds)}`;
+        updateStatus(true);
+    }
 }
 
 function renderHostGrid(results) {
     const grid = document.getElementById('host-grid');
-    grid.innerHTML = '';
-    results.forEach(r => grid.appendChild(makeHostCard(r)));
+    grid.innerHTML = `
+        <table class="host-table">
+            <colgroup>
+                <col class="col-status">
+                <col class="col-name">
+                <col class="col-metric">
+                <col class="col-metric">
+                <col class="col-metric">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th class="col-left"></th>
+                    <th class="col-left">Host</th>
+                    <th class="col-right">CPU</th>
+                    <th class="col-right">MEM</th>
+                    <th class="col-right">DISK</th>
+                </tr>
+            </thead>
+            <tbody id="host-table-body"></tbody>
+        </table>
+    `;
+    const tbody = document.getElementById('host-table-body');
+    results.forEach(r => {
+        const row = makeHostRow(r);
+        row.addEventListener('click', () => switchTab(r.host_id));
+        tbody.appendChild(row);
+    });
 }
 
-function makeHostCard(result) {
-    const card = document.createElement('div');
-    card.className = 'host-card';
+function makeHostRow(result) {
+    const row = document.createElement('tr');
 
     if (result.error) {
-        card.innerHTML = `
-            <div class="host-name">
-                <span class="offline-badge"></span>${result.host_name}
-            </div>
-            <div class="host-stat offline">${result.error}</div>
+        row.innerHTML = `
+            <td class="col-left"><span class="offline-badge"></span></td>
+            <td class="col-left col-name">${result.host_name}</td>
+            <td class="col-right col-error" colspan="3">${result.error}</td>
         `;
-        return card;
+        return row;
     }
 
     const m = result.metrics;
     const rootDisk = m.disk?.partitions?.find(p => p.mountpoint === '/') ?? m.disk?.partitions?.[0];
 
-    card.innerHTML = `
-        <div class="host-name">
-            <span class="online-badge"></span>${result.host_name}
-        </div>
-        <div class="host-stat">CPU &nbsp;&nbsp; ${m.cpu.percent.toFixed(1)}%</div>
-        <div class="host-stat">MEM &nbsp;&nbsp; ${m.memory.percent.toFixed(1)}%</div>
-        <div class="host-stat">DISK &nbsp; ${rootDisk ? rootDisk.percent.toFixed(1) + '%' : 'n/a'}</div>
-        <div class="host-stat">UP &nbsp;&nbsp;&nbsp; ${formatUptime(m.system.uptime_seconds)}</div>
+    row.innerHTML = `
+        <td class="col-left"><span class="online-badge"></span></td>
+        <td class="col-left col-name">${result.host_name}</td>
+        <td class="col-right">${m.cpu.percent.toFixed(1)}%</td>
+        <td class="col-right">${m.memory.percent.toFixed(1)}%</td>
+        <td class="col-right">${rootDisk ? rootDisk.percent.toFixed(1) + '%' : 'n/a'}</td>
     `;
-
-    card.style.cursor = 'pointer';
-    card.addEventListener('click', () => switchTab(result.host_id));
-
-    return card;
+    return row;
 }
 
 // ── Host detail view ─────────────────────────────────────
@@ -202,7 +228,7 @@ function updateStatus(ok) {
     const text = document.getElementById('status-text');
     if (ok) {
         dot.className = '';
-        text.textContent = 'live';
+        text.textContent = 'online';
     } else {
         dot.className = 'error';
         text.textContent = 'error';
@@ -210,7 +236,6 @@ function updateStatus(ok) {
 }
 
 function updateDashboard(metrics) {
-    document.getElementById('hostname').textContent = metrics.system.hostname;
     document.getElementById('timestamp').textContent = metrics.timestamp;
     document.getElementById('uptime').textContent =
         `up ${formatUptime(metrics.system.uptime_seconds)}`;
